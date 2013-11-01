@@ -6,36 +6,36 @@ import scala.xml.{Node, NodeSeq, Elem}
 
 /**
  * Created with IntelliJ IDEA.
- * User: root
+ * User: Fahd
  * Date: 31/10/2013
  * Time: 23:09
- * To change this template use File | Settings | File Templates.
+ * XML responses for Chataan Clients
  */
 
 object XMLize {
-  implicit def toXML(e:Any):Elem = e match {
-    case x:String => <string>{x}</string>
-    case x:Double => <real>{x}</real>
-    case _ => <unknownType/>
+  def toPList[T](x: T): Elem = <pList>{XMLize.toXML(x)}</pList>
+  def toXML[T](x: T): Elem = x match {
+    case e: String => <string>{e}</string>
+    case e: Double => <real>{e}</real>
+    case e: Integer => <integer>{e}</integer>
+    case true => <true/> case false => <false/>
+    case m: Map[String,AnyRef] => <dict/>.copy(child = m.map(e => List(<key>{e._1}</key>,XMLize.toXML(e._2))).flatten.toSeq)
+    case l: List[AnyRef] => <array/>.copy(child = l.map(e => XMLize.toXML(e)).toSeq)
+    case e => <unknown>{e.toString}</unknown>
   }
-
-  // May be ambiguity on type Any/Map[String,Any] -- TODO: Fix this
-  implicit def toXML(m: Map[String,Any]):Elem =
-    <dict/>.copy(child = m.map(e => List(<key>{e._1}</key>,XMLize.toXML(e._2))).flatten.toSeq)
-
-    implicit def toXML(list: List[_]) = {
-      <array>
-        {for (e <- list)
-      yield <real>{e}</real>
-        }
-      </array>
-    }
 }
 
 object Chataan extends Controller {
-  val sampleList = List(1.1, 1.2, 1.3)
-  val sampleMap = Map("key1" -> "ValueHere", "key2" -> 1.2)
+  val trueFalseList = List(true, false, false)
+  val sampleMap = Map(
+    "key1" -> "string value here",
+    "key2" -> List (
+      0.1, 0.5, 0.4, 0.6, 0.1, 0.7, 0.2, 0.9
+    ),
+    "a number" -> 5,
+    "trueFalseList" -> trueFalseList
+  )
   def topEntities = Action {
-    Ok(XMLize.toXML(sampleMap))
+    Ok(XMLize.toPList(sampleMap))
   }
 }
