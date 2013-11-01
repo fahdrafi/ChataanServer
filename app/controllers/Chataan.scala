@@ -13,7 +13,10 @@ import scala.xml.{Node, NodeSeq, Elem}
  */
 
 object XMLize {
-  def toPList[T](x: T): Elem = <pList>{XMLize.toXML(x)}</pList>
+  def toPList[T](x: T) = {
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" +
+      <pList version="1.0">{XMLize.toXML(x)}</pList>
+  }
   def toXML[T](x: T): Elem = x match {
     case e: String => <string>{e}</string>
     case e: Double => <real>{e}</real>
@@ -36,6 +39,6 @@ object Chataan extends Controller {
     "trueFalseList" -> trueFalseList
   )
   def topEntities = Action {
-    Ok(XMLize.toPList(sampleMap))
+    Ok(XMLize.toPList(sampleMap)).as("application/xml")
   }
 }
