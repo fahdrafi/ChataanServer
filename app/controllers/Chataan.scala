@@ -13,10 +13,15 @@ import scala.xml.{Node, NodeSeq, Elem}
  */
 
 object XMLize {
-  implicit def toXML(string: String):Elem = <string>string</string>
+  implicit def toXML(e:Any):Elem = e match {
+    case x:String => <string>{x}</string>
+    case x:Double => <real>{x}</real>
+    case _ => <unknownType/>
+  }
 
-  implicit def toXML(m: Map[String,String]) =
-    <dict/>.copy(child = m.map(e => <key>{e._1}</key>).toSeq)
+  // May be ambiguity on type Any/Map[String,Any] -- TODO: Fix this
+  implicit def toXML(m: Map[String,Any]):Elem =
+    <dict/>.copy(child = m.map(e => List(<key>{e._1}</key>,XMLize.toXML(e._2))).flatten.toSeq)
 
     implicit def toXML(list: List[_]) = {
       <array>
@@ -29,7 +34,7 @@ object XMLize {
 
 object Chataan extends Controller {
   val sampleList = List(1.1, 1.2, 1.3)
-  val sampleMap = Map("key1" -> "Value1", "key2" -> "value2")
+  val sampleMap = Map("key1" -> "ValueHere", "key2" -> 1.2)
   def topEntities = Action {
     Ok(XMLize.toXML(sampleMap))
   }
